@@ -36,8 +36,7 @@ When little data is available, we can use a few techniques :
 - Simple hold-out validation :  regular case where we have 3 sets; bad when not a lot of data is available, the validation and test sets are too small to be statisctically representative
 - K-fold validation :
 The data gets splitted in chunks (4-5) of same size. The model is created and trained on the 4/5 of the data and validated for each fold (the validation set changes everytime). The results are averaged over each fold.
-
-With shuffling : the data is shuffled before each fold.
+- Iterated K-fold validation With shuffling : the data is shuffled before each fold and the training is done P times
 
 To keep in mind :
 - the data should be representative (shuffling in some cases)
@@ -150,3 +149,74 @@ model.add(layers.Dense(16, activation = 'relu'))
 model.add(layers.Dropout(0.5))
 model.add(layers.Dense(1, activation = 'sigmoid'))
 ```
+
+### Workflow
+
+#### Define the problem and get the dataset
+
+What should be the input that we want to predict : we need the data for it.
+
+What type of problem are we trying to solve (binary, multiclass or multilabel classification, scalar or vector regression, clustering, etc) will define the model we use.
+
+We have to make sure that the output can be predicted with the inputs. Some problems can not be solved with the available data ! For instance trying to predict which clothes people will buy with one month of data is impossible, it requires a few years of data and to use the time as a feature.
+
+#### Choose a measure of success
+
+We must be able to know how successful the system is by choosing the right loss function.
+
+- Classification (where each class is as likely as the others) : accuracy and ROC AUC
+
+- Imbalanced classification : precision and recall
+
+- Multilabel classification : mean average precision
+
+Kaggle gives access to custom evaluation metrics.
+
+#### Evaluation protocol
+
+We want to measure the progress of the system.
+
+- hold-out validation set when we have a lot of data
+- K-fold cross-validation when we have too few samples for hold-out
+- iterated K-fold validation with shuffling for a great accuracy when little data available
+
+#### Preparing the data
+
+The data must be formatted as tensors and be in ranges ([-1, 1] or [0, 1]).
+
+#### Developing a model
+
+We want to make a simple model that can beat a random result. If it works it means we can predict at some extent the output with the data.
+
+We will then :
+- define the last-layer activation (or not in some cases like the regression example)
+- pick a loss function
+- select an optimizer
+
+| Type | Activation | Loss |
+|---|---|---|
+| Binary classification | `sigmoid` | `binary_crossentropy` |
+| Multiclass, single-label classification | `softmax` | `categorical_crossentropy` |
+| Multiclass, multilabel classification | `sigmoid` | `binary_crossentropy` |
+| Regression to arbitrary values | None | `mse` |
+| Regression to values between 0 and 1 | `sigmoid` | `mse` or `binary_crossentropy` |
+
+#### Scaling up
+
+We want to find the sweetspot of the model by changing some parameters :
+- add more layers
+- have bigger layers
+- train with more epochs
+
+At the end we will have a model that can generalize without overfitting or underfitting.
+
+#### Regularize and tuning
+
+This step tweaks the model by :
+- adding a dropout
+- add or remove layers
+- add L1 and/or L2 regularization
+- try different hyperparameters (like the number of units per layer or the learning rate of the optimizer)
+- potentially adding usefull or removing useless features
+
+Too much tuning against the validation set will make the model overfit the validation data. When the process is over, we want to retrain the model and test it from scratch against a brand new test to prevent this issue.
