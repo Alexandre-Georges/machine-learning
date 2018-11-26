@@ -60,4 +60,19 @@ The accuracy is more than 99%, way better than a regular dense neural network.
 
 Dense networks learn global patterns, they take all the inputs. Convnets find local patterns like patches of pixels that are relevant for the analysis we want to do. Those patterns can be found anywhere in the image, they are not tied to a specific position.
 
-With multiple layers, convnets learn the relevant pieces thanks to the first layer, then the second will use those low-level patterns and make sense of them and so on for the next layers.
+With multiple layers, convnets learn the relevant pieces thanks to the first layer, then the second will use those low-level patterns and make sense of them and build on top of them. And so on for the next layers, making each layer more global than the previous one.
+
+`layers.Conv2D(32, (3, 3), activation = 'relu', input_shape = (28, 28, 1))`
+In our example there is 32 filters on 3 x 3 patches.
+
+The output is always smaller than the input by 1 (vertically and horizontally). To get an output that has the same size than the input, we can use padding (`padding` argument set to `same` in the Conv2D layer).
+
+By default, each filter is applied on each possible location (stride of 1) so the filter moves by 1 pixel. We could technically use a bigger stride to make the process faster but max-pooling is instead better.
+
+Max-pooling is a layer that cuts down the number of features.
+
+`layers.MaxPooling2D((2, 2)` divides the features by 2 for each dimension. It outputs the maximum value of the input features.
+
+Effectively, using those layers compresses the features and by doing that the system generalizes them so it can learn from them and it also prevents overfitting.
+
+### Training a convnet on a small dataset
