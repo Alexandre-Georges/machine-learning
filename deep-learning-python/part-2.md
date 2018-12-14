@@ -76,3 +76,5 @@ Max-pooling is a layer that cuts down the number of features.
 Effectively, using those layers compresses the features and by doing that the system generalizes them so it can learn from them and it also prevents overfitting.
 
 ### Training a convnet on a small dataset
+
+Cf 7-cat-or-dog.py
