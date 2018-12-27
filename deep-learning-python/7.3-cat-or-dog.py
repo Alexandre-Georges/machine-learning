@@ -127,3 +127,4 @@ plt.legend()
 plt.show()
 
 # We now reach 82% accuracy from 72%, with some tweaks we can reach 86-87%
+# The validation line is really close to the training one.

@@ -78,3 +78,31 @@ Effectively, using those layers compresses the features and by doing that the sy
 ### Training a convnet on a small dataset
 
 Cf 7-cat-or-dog.py
+
+### Pre-trained convnet
+
+The system used a network that has been trained on a huge dataset so it does not require to learn as much.
+Even if the system was not trained specifically on what we are trying to do, if it is a subset it can be reused.
+
+The interesting features are extracted and run through a new classifier trained from scratch. As the classifier of the pre-trained network is too generic, we make a new one while reusing the convolutionnal base.
+
+If the dataset differs a lot from the one used to pre-train the model, it is better to discard the last ones because they are higher level layers. Effectiveley the first layers are used to identify local patterns like textures, colours or edges.
+
+Cf 8.1-pre-trained-convnet.py
+
+We have 2 options to add the last layers :
+- running the network (without the last layers) over the training set, exporting the output and use that as an input for a new network that contains only the last layers. This is cheap but can not use the data augmentation. Cf 8.2-without-data-augmentation.py
+- add the layers on top of the current network and run it on the training set. This can use data augmentation and therefore can be more expensive to run. Cf 8.3-with-data-augmentation.py
+
+To fine-tune the models, another approach is used : unfreeze a few top layers (last ones) and train it along with the added last layers. It adjusts the abstract representations (high level) to better match the current problem.
+
+The last layer needs to be trained first so it will not destroy the potentially unfrozen top layers by propagating large errors and not overfit as we added a lot of parameters. Then the top layers of the original network is unfrozen and train with the added layers.
+
+Cf 8.4-fine-tuning.py
+
+### Conclusion
+
+- Convnets are great for vision tasks
+- They will overfit on a small dataset but data augmentation will help mitigate this issue
+- Existing convnets can be reused for different tasks via feature extraction which is great for small datasets
+- Fine-tuning helps a bit to fit the current problem more closely
