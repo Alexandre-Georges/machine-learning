@@ -4,12 +4,8 @@ from keras import models
 from keras import layers
 from keras import optimizers
 from keras.preprocessing.image import ImageDataGenerator
+from keras.applications.imagenet_utils import preprocess_input
 import matplotlib.pyplot as plt
-
-base_dir = './cat_or_dog_small'
-train_dir = os.path.join(base_dir, 'train')
-validation_dir = os.path.join(base_dir, 'validation')
-test_dir = os.path.join(base_dir, 'test')
 
 conv_base = VGG16(
   # Weights used in the model
@@ -19,19 +15,26 @@ conv_base = VGG16(
   # Sizes of the images
   input_shape = (150, 150, 3),
 )
-conv_base.summary()
 
-conv_base.trainable = True
-set_trainable = False
+base_dir = './cat_or_dog_small'
+train_dir = os.path.join(base_dir, 'train')
+validation_dir = os.path.join(base_dir, 'validation')
+test_dir = os.path.join(base_dir, 'test')
 
-for layer in conv_base.layers:
-  if layer.name == 'block5_conv1':
-    set_trainable = True
-  if set_trainable:
-    layer.trainable = True
-  else:
-    layer.trainable = False
+# Creating a new model with the existing one as a base
+model = models.Sequential()
+model.add(conv_base)
+model.add(layers.Flatten())
+model.add(layers.Dense(256, activation = 'relu'))
+model.add(layers.Dense(1, activation = 'sigmoid'))
 
+model.summary()
+
+# In Keras > 2.1, conv_base.trainable works as expected unlike before
+conv_base.trainable = False
+
+# Training the network with data augmentation
+# Fix : we preprocess the input as the pre-trained convnet expects [0, 255] and not [0, 1] so we can reach the annonced accuracy
 train_datagen = ImageDataGenerator(
   # rescale = 1. / 255,
   preprocessing_function = preprocess_input,
@@ -43,6 +46,8 @@ train_datagen = ImageDataGenerator(
   horizontal_flip = True,
   fill_mode = 'nearest',
 )
+# Fix : same here, we pre-process the input instead of rescaling
+# test_datagen = ImageDataGenerator(rescale = 1. / 255)
 test_datagen = ImageDataGenerator(preprocessing_function = preprocess_input)
 train_generator = train_datagen.flow_from_directory(
   train_dir,
@@ -57,21 +62,15 @@ validation_generator = test_datagen.flow_from_directory(
   class_mode = 'binary',
 )
 
-model = models.Sequential()
-model.add(conv_base)
-model.add(layers.Flatten())
-model.add(layers.Dense(256, activation = 'relu'))
-model.add(layers.Dense(1, activation = 'sigmoid'))
 model.compile(
   loss = 'binary_crossentropy',
-  optimizer = optimizers.RMSprop(lr = 1e-5),
+  optimizer = optimizers.RMSprop(lr = 2e-5),
   metrics = ['acc'],
 )
-
 history = model.fit_generator(
   train_generator,
   steps_per_epoch = 100,
-  epochs = 100,
+  epochs = 30,
   validation_data = validation_generator,
   validation_steps = 50,
 )
@@ -94,39 +93,4 @@ plt.title('Training and validation loss')
 plt.legend()
 plt.show()
 
-# The results are noisy, with an exponential average we will smooth out the curve
-
-def smooth_curve(points, factor = 0.8):
-  smoothed_points = []
-  for point in points:
-    if smoothed_points:
-      previous = smoothed_points[-1]
-      smoothed_points.append(previous * factor + point * (1 - factor))
-    else:
-      smoothed_points.append(point)
-  return smoothed_points
-
-plt.plot(epochs, smooth_curve(acc), 'bo', label = 'Smoothed training acc')
-plt.plot(epochs, smooth_curve(val_acc), 'b', label = 'Smoothed validation acc')
-plt.title('Training and validation accuracy')
-plt.legend()
-plt.figure()
-
-plt.plot(epochs, smooth_curve(loss), 'bo', label = 'Smoothed training loss')
-plt.plot(epochs, smooth_curve(val_loss), 'b', label = 'Smoothed validation loss')
-plt.title('Training and validation loss')
-plt.legend()
-plt.show()
-
-# Accuracy of 97%
-
-test_generator = test_datagen.flow_from_directory(
-  test_dir,
-  target_size = (150, 150),
-  batch_size = 20,
-  class_mode = 'binary',
-)
-test_loss, test_acc = model.evaluate_generator(test_generator, steps = 50)
-print('test acc:', test_acc)
-
-# 97% as well
+# Accuracy of 96%

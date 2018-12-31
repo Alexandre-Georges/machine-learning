@@ -29,12 +29,13 @@ model.add(layers.Dense(1, activation = 'sigmoid'))
 
 model.summary()
 
-# The base is frozen so it can not be trained
-conv_base.trainable = False
+# In Keras > 2.1, conv_base.trainable works as expected unlike before
+# In this case, we will retrain the base to reach the annonced accuracy
+# conv_base.trainable = False
 
 # Training the network with data augmentation
 train_datagen = ImageDataGenerator(
-  rescale = 1./255,
+  rescale = 1. / 255,
   rotation_range = 40,
   width_shift_range = 0.2,
   height_shift_range = 0.2,
