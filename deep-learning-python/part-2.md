@@ -91,6 +91,7 @@ If the dataset differs a lot from the one used to pre-train the model, it is bet
 Cf 8.1-pre-trained-convnet.py
 
 We have 2 options to add the last layers :
+
 - running the network (without the last layers) over the training set, exporting the output and use that as an input for a new network that contains only the last layers. This is cheap but can not use the data augmentation. Cf 8.2-without-data-augmentation.py
 - add the layers on top of the current network and run it on the training set. This can use data augmentation and therefore can be more expensive to run. Cf 8.3-with-data-augmentation.py
 
@@ -100,9 +101,35 @@ The last layer needs to be trained first so it will not destroy the potentially 
 
 Cf 8.4-fine-tuning.py
 
-### Conclusion
+### Conclusion 1
 
 - Convnets are great for vision tasks
 - They will overfit on a small dataset but data augmentation will help mitigate this issue
 - Existing convnets can be reused for different tasks via feature extraction which is great for small datasets
 - Fine-tuning helps a bit to fit the current problem more closely
+
+### Visualization of a convnet
+
+- Visualizing intermediate activations
+
+This shows how the successive layers transform their inputs.
+
+Cf 8.5.1
+
+- Visualizing convnet filters
+
+Shows what patterns filters are receptive to.
+
+Cf 8.5.2
+
+- Visualizing heatmaps of class activation
+
+Explains which parts are used to classify an image.
+
+Cf 8.5.3
+
+### Conclusion 2
+
+- Convnets are great for visual-classification problems
+- They use a hierarchy of patterns and concepts to visualize
+- Data augmentation is great to avoid overfitting
