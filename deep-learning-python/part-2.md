@@ -133,3 +133,32 @@ Cf 8.5.3
 - Convnets are great for visual-classification problems
 - They use a hierarchy of patterns and concepts to visualize
 - Data augmentation is great to avoid overfitting
+
+## Chapter 6 - Deep learning for text and sequences
+
+There are 2 algorithms :
+
+- recurrent neural networks
+- 1D convnets (one dimension)
+
+### Working with text data
+
+Models do not take words, they take numeric tensors : words are converted into numbers (vectorizing). The text is broken down into words, characters or n-grams (sequence of characters or words, groups of N words or characters), called tokens.
+
+One can use : one-hot encoding or token/word embedding.
+
+N-gram : for instance a 2-gram with "the cat sat on the table" would be
+"the", "cat", "sat", "on", "the", "table", "the cat", "cat sat", "sat on", ...
+This is called a bag of 2 grams, they are actually seen as sets which destroys the order of the words. They are used for shallow models and not in deep learning models.
+
+One-hot encoding : associates an integer with each word or character.
+
+Cf 9.1.1, 9.1.2 and 9.1.3
+
+Word embeddings : one-hot encoding gives big vectors that do not contain a lot of data (lots of 0s). Word embedding generates smaller vectors, the information is denser and requires less memory.
+
+It creates a map to know how related words are compared to each other, the more related they are the closer they are on the map. Transformations can be applied to go from one word to another one (for instance king + female -> queen).
+
+The context plays an important role, for better results a word-embedding space can be used only for the context it was trained on.
+
+Cf 9.2.1
