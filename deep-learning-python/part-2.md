@@ -162,3 +162,10 @@ It creates a map to know how related words are compared to each other, the more 
 The context plays an important role, for better results a word-embedding space can be used only for the context it was trained on.
 
 Cf 9.2.1
+
+We can also use pre-trained word embedding if the problem we want to solve uses a generic enough vocabulary. This approach is very similar to pre-trained convnets.
+
+Word2vec is very popular one that can capture semantic properties like gender.
+GloVe is another popular one.
+
+#### Full example
