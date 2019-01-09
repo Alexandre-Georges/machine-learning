@@ -5,7 +5,10 @@ import os
 imdb_dir = './aclImdb'
 train_dir = os.path.join(imdb_dir, 'train')
 
+# Labels contains the rating (negative/positive)
 labels = []
+
+# Texts contains the review texts
 texts = []
 
 # The reviews are either positive or negative
@@ -17,7 +20,7 @@ for label_type in ['neg', 'pos']:
       f = open(os.path.join(dir_name, fname))
       texts.append(f.read())
       f.close()
-      
+
       if label_type == 'neg':
         labels.append(0)
       else:
@@ -27,7 +30,7 @@ from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
 import numpy as np
 
-# Only the 100 more frequent words of each review are kept
+# Only the 100 first words of each review are kept
 maxlen = 100
 
 # Only 200 training samples
@@ -37,12 +40,13 @@ validation_samples = 10000
 # Only the top 10k words
 max_words = 10000
 
+# Builds a dictionnary/map of words : each word gets a unique index
+# { film: 19, the: 1, [...] }
+# It keeps only a predefined number of words
 tokenizer = Tokenizer(num_words = max_words)
-
-# Trains the tokenizer on the reviews
 tokenizer.fit_on_texts(texts)
 
-# Returns the sequences of the reviews
+# This is the sequence of words, represented by their indexes : [ 1, 19 , [...]]
 sequences = tokenizer.texts_to_sequences(texts)
 
 word_index = tokenizer.word_index
@@ -52,19 +56,17 @@ print('Found %s unique tokens.' % len(word_index))
 data = pad_sequences(sequences, maxlen = maxlen)
 print('Shape of data tensor:', data.shape)
 
+# Transforms the list into an np array
 labels = np.asarray(labels)
 print('Shape of label tensor:', labels.shape)
 
 # Shuffles the data
 indices = np.arange(data.shape[0])
 np.random.shuffle(indices)
-
-# The data consists of the review potentially truncated
 data = data[indices]
-
-# Labels tell us if the review is positive or negative
 labels = labels[indices]
 
+# Splits the data into training and validation sets
 x_train = data[:training_samples]
 y_train = labels[:training_samples]
 
@@ -78,6 +80,8 @@ glove_dir = './glove.6B'
 embeddings_index = {}
 f = open(os.path.join(glove_dir, 'glove.6B.100d.txt'))
 
+# Each line starts with the word and then a sequence of 100 coefficients (weights)
+# We take the 40k most common words, the sequence details how the word is linked to the others
 for line in f:
   values = line.split()
   word = values[0]
@@ -87,13 +91,16 @@ for line in f:
 f.close()
 print('Found %s word vectors.' % len(embeddings_index))
 
+# Now we will create a matrix of the reviews' words
+# We will copy over the coefficients from glove for each word of the reviews
 embedding_dim = 100
 embedding_matrix = np.zeros((max_words, embedding_dim))
 
 for word, i in word_index.items():
+  # We keep only the most used words, the other ones will have 0s
   if i < max_words:
     embedding_vector = embeddings_index.get(word)
-    # Not found words will have 0s
+    # Words that are not found in GloVe will have 0s as well
     if embedding_vector is not None:
       embedding_matrix[i] = embedding_vector
 
