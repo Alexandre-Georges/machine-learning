@@ -171,3 +171,53 @@ GloVe is another popular one.
 #### Full example
 
 Cf 9.2
+
+### Recurrent neural networks
+
+The previous neural networks do not have state : each serie of input is presented to the network and the network will process them independently.
+
+The only way to connect different samples would be to have them all as an entire sequence. One example would be processing images vs processing videos (serie of images).
+
+The networks we have seen can process images but those images would be processed indenpendently of each others unless we turn the all images into one serie of inputs (video).
+
+Recurrent networks update their current state as they process the samples (like reading a sentence).
+
+On a technical standpoint, each neuron takes as input a sample and also the previous state of the current neuron.
+
+```python
+state_t = 0
+for input_t in input_sequence:
+  output_t = activation(dot(W, input_t) + dot(U, state_t) + b)
+  state_t = output_t
+```
+
+Cf 9.3.1 for an implementation
+
+This neuron is called SimpleRNN in Keras.
+
+Recurrent networks have 2 modes : with the first one they will return the whole sequence of outputs (for each sample) or only the last output for each sample.
+
+Keras has two other types of RNN : LSTM and GRU.
+SimpleRNN is too simplistic to be used in real models and also it is hard to train such networks (vanishing gradient problem like with a network that has too many layers). LSTM and GRU are designed to solve this problem.
+
+LSTM : Long Short-Term Memory
+LSTM can carry (C_t) information accross many timesteps, it saves information for later so the information does not vanish.
+
+```python
+output_t = activation(dot(state_t, Uo) + dot(input_t, Wo) + dot(C_t, Vo) + bo)
+
+i_t = activation(dot(state_t, Ui) + dot(input_t, Wi) + bi)
+f_t = activation(dot(state_t, Uf) + dot(input_t, Wf) + bf)
+k_t = activation(dot(state_t, Uk) + dot(input_t, Wk) + bk)
+
+c_t+1 = i_t * k_t + c_t * f_t
+```
+
+`i_t * k_t` provide information about the current inputs (i_t) to update the carry track (k_t)
+`c_t * f_t` means the carry (c_t) can be forgotten (f_t)
+
+Basically a carry is computed from the input of the neuron which is then plugged into the next iteration and then becomes an input of the neuron. The neuron has 3 inputs : the regular inputs, the state of the last iteration and the carry of the last iteration.
+
+The theory is not important, the neuron has a way to carry information from before if it thinks it is necessary.
+
+Cf 9.3.4

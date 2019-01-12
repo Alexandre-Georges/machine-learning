@@ -73,7 +73,7 @@ loss_values = history_dict['loss']
 # Losses for the validation
 val_loss_values = history_dict['val_loss']
 
-epochs = range(1, len(loss_values) + 1) 
+epochs = range(1, len(loss_values) + 1)
 
 # Bo will be blue dots
 plt.plot(epochs, loss_values, 'bo', label = 'Training loss')
