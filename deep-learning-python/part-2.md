@@ -221,3 +221,7 @@ Basically a carry is computed from the input of the neuron which is then plugged
 The theory is not important, the neuron has a way to carry information from before if it thinks it is necessary.
 
 Cf 9.3.4
+
+### Advanced uses of recurrent neural networks
+
+Cf 9.4.1
