@@ -224,4 +224,26 @@ Cf 9.3.4
 
 ### Advanced uses of recurrent neural networks
 
-Cf 9.4.1
+Cf 9.4.*
+
+To improve the performances we have other leads to explore :
+
+- change the number of units in each layer
+- change the learning rate
+- switch to LSTM layers instead of GRU
+- use bigger densely connected layer or multiple densely connected layers
+- run the best performing models against the test set to not overfit to the training and validation sets
+
+### Sum-up
+
+The procedure that we used is the following :
+
+- start with a baseline so we can know if we improve over it
+- try simple models first
+- when the order of the samples matter RNN are a good fit
+- when using an RNN adding a dropout is different, there is no layer for that but parameters (cf code)
+- having multiple recurrent layers improve the representational power but is much more costly
+- bi-directional RNN are good for language processing where the order of words matters
+- but they are not so good when going through samples where the latest ones are more relevant than the first ones
+
+For language processing, two concepts are particularly relevant but not studied in this book : recurrent attention and sequence masking.

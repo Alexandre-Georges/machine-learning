@@ -29,17 +29,6 @@ plt.figure()
 # Plots the first 10 days, one timestep is 10 minutes (1440 * 10 / 60 / 24 = 10 days)
 plt.plot(range(1440), temp[:1440])
 
-# First we need to prepare the data with some parameters
-
-# We will look at the 5 previous days (720 * 10 / 60 / 24 = 5 days)
-lookback = 720
-
-# One data point per hour, we will bundle 6 data points in one (6 times 10 minutes)
-step = 6
-
-# This represent the target which is 24h in the future (144 * 10 / 60 / 24 = 1 day)
-delay = 144
-
 # The data needs to be normalized as they use different units and their ranges are dramatically different
 mean = float_data[:200000].mean(axis = 0)
 float_data -= mean
@@ -87,3 +76,70 @@ def generator(data, lookback, delay, min_index, max_index, shuffle = False, batc
       targets[j] = data[rows[j] + delay][1]
 
     yield samples, targets
+
+# Let's define some parameters
+
+# We will look at the 10 previous days (1440 * 10 / 60 / 24 = 10 days)
+lookback = 1440
+
+# One data point per hour, we will use one data points out of 6 (6 times 10 minutes)
+step = 6
+
+# This represent the target which is 24h in the future (144 * 10 / 60 / 24 = 1 day)
+delay = 144
+
+# Number of samples generated each time we call the generator
+batch_size = 128
+
+# We create a generator for each data set
+train_gen = generator(
+  float_data,
+  lookback = lookback,
+  delay = delay,
+  min_index = 0,
+  max_index = 200000,
+  shuffle = True,
+  step = step,
+  batch_size = batch_size,
+)
+
+val_gen = generator(
+  float_data,
+  lookback = lookback,
+  delay = delay,
+  min_index = 200001,
+  max_index = 300000,
+  step = step,
+  batch_size = batch_size,
+)
+
+test_gen = generator(
+  float_data,
+  lookback = lookback,
+  delay = delay,
+  min_index = 300001,
+  max_index = None,
+  step = step,
+  batch_size = batch_size,
+)
+
+# Number of steps to draw to get the dataset
+val_steps = (300000 - 200001 - lookback) // batch_size
+test_steps = (len(float_data) - 300001 - lookback) // batch_size
+
+# We will establish a baseline prediction that the machine learning system will have to beat
+# In this case, the prediction for the temperature will be the day before's temperature
+def evaluate_naive_method():
+  batch_maes = []
+  for step in range(val_steps):
+    samples, targets = next(val_gen)
+    preds = samples[:, -1, 1]
+    mae = np.mean(np.abs(preds - targets))
+    batch_maes.append(mae)
+  print('Baseline mean absolute error to beat: %d', np.mean(batch_maes))
+
+evaluate_naive_method()
+
+# The baseline mean absolute error is 0.29 which is 2.57˚C
+celsius_mae = 0.29 * std[1]
+print(celsius_mae)
