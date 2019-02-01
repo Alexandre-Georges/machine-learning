@@ -222,7 +222,7 @@ The theory is not important, the neuron has a way to carry information from befo
 
 Cf 9.3.4
 
-### Advanced uses of recurrent neural networks
+#### Advanced uses of recurrent neural networks
 
 Cf 9.4.*
 
@@ -234,7 +234,7 @@ To improve the performances we have other leads to explore :
 - use bigger densely connected layer or multiple densely connected layers
 - run the best performing models against the test set to not overfit to the training and validation sets
 
-### Sum-up
+#### Sum-up
 
 The procedure that we used is the following :
 
@@ -247,3 +247,5 @@ The procedure that we used is the following :
 - but they are not so good when going through samples where the latest ones are more relevant than the first ones
 
 For language processing, two concepts are particularly relevant but not studied in this book : recurrent attention and sequence masking.
+
+### Sequence processing with convnets
