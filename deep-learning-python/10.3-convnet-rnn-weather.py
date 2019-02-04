@@ -55,8 +55,8 @@ def generator(data, lookback, delay, min_index, max_index, shuffle = False, batc
 # We will look at the 10 previous days (1440 * 10 / 60 / 24 = 10 days)
 lookback = 1440
 
-# One data point per hour, we will use one data points out of 6 (6 times 10 minutes)
-step = 6
+# One data point per half-hour, we will use one data points out of 3 (3 times 10 minutes)
+step = 3
 
 # This represent the target which is 24h in the future (144 * 10 / 60 / 24 = 1 day)
 delay = 144
@@ -101,26 +101,27 @@ val_steps = (300000 - 200001 - lookback) // batch_size
 test_steps = (len(float_data) - 300001 - lookback) // batch_size
 
 """
-We use a bi-directional GRU neural network on the weather dataset.
+The step parameter has been changed from 6 to 3 since we can process a lot
+more timesteps with this network.
 """
 from keras.models import Sequential
 from keras import layers
 from keras.optimizers import RMSprop
 
 model = Sequential()
-model.add(
-  layers.Bidirectional(
-    layers.GRU(32),
-    input_shape = (None, float_data.shape[-1]),
-  )
-)
+model.add(layers.Conv1D(32, 5, activation = 'relu', input_shape = (None, float_data.shape[-1])))
+model.add(layers.MaxPooling1D(3))
+model.add(layers.Conv1D(32, 5, activation = 'relu'))
+model.add(layers.GRU(32, dropout = 0.1, recurrent_dropout = 0.5))
 model.add(layers.Dense(1))
+model.summary()
+
 model.compile(optimizer = RMSprop(), loss = 'mae')
 
 history = model.fit_generator(
   train_gen,
   steps_per_epoch = 500,
-  epochs = 40,
+  epochs = 20,
   validation_data = val_gen,
   validation_steps = val_steps,
 )
@@ -140,8 +141,6 @@ plt.legend()
 plt.show()
 
 """
-It performs as well as the GRU uni-directional RNN, it is expected as the results come from the chronological order of the samples.
-There is no benefit in using a bi-directional RNN because when processing the samples in reverse order
-the last samples to be processed are the oldest ones (X - 10) which are not that useful to get the prediction (X).
-It is better in this case to process the most recent samples last (X - 1).
+The results (0.27 MAE) are less good than with the GRU alone (0.26 MAE) however the network processes twice as
+much data. In this case, it does not bring more value but for some other problems it might.
 """

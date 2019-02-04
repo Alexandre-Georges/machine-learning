@@ -100,27 +100,25 @@ test_gen = generator(
 val_steps = (300000 - 200001 - lookback) // batch_size
 test_steps = (len(float_data) - 300001 - lookback) // batch_size
 
-"""
-We use a bi-directional GRU neural network on the weather dataset.
-"""
 from keras.models import Sequential
 from keras import layers
 from keras.optimizers import RMSprop
 
 model = Sequential()
-model.add(
-  layers.Bidirectional(
-    layers.GRU(32),
-    input_shape = (None, float_data.shape[-1]),
-  )
-)
+model.add(layers.Conv1D(32, 5, activation = 'relu', input_shape = (None, float_data.shape[-1])))
+model.add(layers.MaxPooling1D(3))
+model.add(layers.Conv1D(32, 5, activation = 'relu'))
+model.add(layers.MaxPooling1D(3))
+model.add(layers.Conv1D(32, 5, activation = 'relu'))
+model.add(layers.GlobalMaxPooling1D())
 model.add(layers.Dense(1))
+
 model.compile(optimizer = RMSprop(), loss = 'mae')
 
 history = model.fit_generator(
   train_gen,
   steps_per_epoch = 500,
-  epochs = 40,
+  epochs = 20,
   validation_data = val_gen,
   validation_steps = val_steps,
 )
@@ -140,8 +138,7 @@ plt.legend()
 plt.show()
 
 """
-It performs as well as the GRU uni-directional RNN, it is expected as the results come from the chronological order of the samples.
-There is no benefit in using a bi-directional RNN because when processing the samples in reverse order
-the last samples to be processed are the oldest ones (X - 10) which are not that useful to get the prediction (X).
-It is better in this case to process the most recent samples last (X - 1).
+Here we tried a convnet on the weather dataset, the MAE is at 0.45
+which is even worse than our baseline. The convnet is unable to put more or less
+emphasis on the datapoint depending on where they are in the sequence.
 """

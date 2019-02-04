@@ -249,3 +249,32 @@ The procedure that we used is the following :
 For language processing, two concepts are particularly relevant but not studied in this book : recurrent attention and sequence masking.
 
 ### Sequence processing with convnets
+
+Convnets are good at finding patterns, when we process a sequence we also look for patterns accross time which makes them particularly good for simple problems (text classification and timeseries forecasting) and cheaper to run than RNNs.
+
+The sequence is processed by extracting a few samples with a sliding window and processing the data of those samples. For instance if we have a window of 5 samples when processing text (5 words), the system will be able to match those 5 or less words wherever they appear.
+
+Cf 10.1
+
+Beside on a local scale (window size), convnets do not care about the order of the samples unlike RNNs since they are processed independently. To catch long-term patterns, multiple convnet layers will have to be stacked on top of each others.
+
+Cf 10.2
+
+Now we will combine a convnet with an RNN so the convnet can find higher level features and the RNN can keep track of the order, also it makes the problem easier to solve as the
+number of features processed by the RNN is smaller and therefore it is faster. This is especially useful when there are a lot of timesteps.
+
+Cf 10.3
+
+1D convnets perform well when looking for local patterns in temporal data, they are a lot faster than RNNs. Their structure is the same than 2D convnets (Conv1D and Pooling1D layers).
+
+As RNNs are expensive to run, it can be great to have a 1D convnet to pre-process the data and make the learning process faster.
+
+#### Sum-up
+
+RNNs are good at timeseries regression (predicting the future), timeseries classification, anomaly detection in timeseries and sequence labelling (like identifying name or dates in a sentence).
+
+1D convnets can be used for sequence to sequence (to extract high-level features), document classification and spelling correction.
+
+If the order of the sequence matters (for example when the more recent data matters more than the old one), it is better to use a RNN.
+
+If the order does not matter (for text for instance when looking for a keyword) a 1D convnet will work as well as an RNN and is a lot cheaper to run.
