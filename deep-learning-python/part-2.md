@@ -269,7 +269,7 @@ Cf 10.3
 
 As RNNs are expensive to run, it can be great to have a 1D convnet to pre-process the data and make the learning process faster.
 
-#### Sum-up
+### Sum-up of chapter 6
 
 RNNs are good at timeseries regression (predicting the future), timeseries classification, anomaly detection in timeseries and sequence labelling (like identifying name or dates in a sentence).
 
@@ -278,3 +278,35 @@ RNNs are good at timeseries regression (predicting the future), timeseries class
 If the order of the sequence matters (for example when the more recent data matters more than the old one), it is better to use a RNN.
 
 If the order does not matter (for text for instance when looking for a keyword) a 1D convnet will work as well as an RNN and is a lot cheaper to run.
+
+## Chapter 7 - Advanced deep-learning best practices
+
+### Going beyond the sequential model : the Keras functional API
+
+All the previous networks have been sequential models but in some cases we might want to have indenpendent inputs or multiple outputs and we will end up with a graph-like model instead of a stack.
+
+For instance, we could need to use a convnet for image processing and an RNN for text processing to answer a single problem (a product with a description and an image).
+
+Similarly, we could also predict unrelated outputs using the same inputs.
+
+Connections between layers could also be different, we might want to reuse the output of the 1st layer into the 3rd layer.
+
+To implement those models, we will use the functional API of Keras.
+
+```python
+from keras import Input, layers
+
+# Tensor
+input_tensor = Input(shape = (32, ))
+
+dense = layers.Dense(32, activation = 'relu')
+
+# The layer called with a tensor returns a tensor
+output_tensor = dense(input_tensor)
+```
+
+Cf 11.1
+
+When merging multiple layers into one, we could use `keras.layers.add`, `keras.layers.concatenate`, etc.
+
+Cf 11.2
