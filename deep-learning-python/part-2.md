@@ -310,3 +310,13 @@ Cf 11.1
 When merging multiple layers into one, we could use `keras.layers.add`, `keras.layers.concatenate`, etc.
 
 Cf 11.2
+
+We can also have multiple outputs, for instance if we want to predict the age, gender, etc of a person.
+
+Cf 11.3
+
+Any kind of network can be built as long as it is not cyclical. Inception modules are an example: they can be used to combine multiple convolutional networks with different sizes and windows into one.
+
+There is also the example of a 2D convolutional layer with a width of 1 x 1. This kind of layer is called a pointwise convolution. They are used to extract information from the channels so they can be easier to process (fewer features than channels). For example when we analyze an image each pixel has a RGB channels (one channel per colour), using a 1x1 layer would process those channels into something more meaningful like contrast. They in fact act as a pre-processor that can reduce the number of features.
+
+Cf 11.4
