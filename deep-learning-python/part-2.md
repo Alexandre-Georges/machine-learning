@@ -320,3 +320,204 @@ Any kind of network can be built as long as it is not cyclical. Inception module
 There is also the example of a 2D convolutional layer with a width of 1 x 1. This kind of layer is called a pointwise convolution. They are used to extract information from the channels so they can be easier to process (fewer features than channels). For example when we analyze an image each pixel has a RGB channels (one channel per colour), using a 1x1 layer would process those channels into something more meaningful like contrast. They in fact act as a pre-processor that can reduce the number of features.
 
 Cf 11.4
+
+The concept of residual connections can be used in graph-like networks that have a lot of layers (more than 10). When added to the network they help deal with the vanishing gradients problem and representational bottlenecks.
+
+Representational bottleneck : so far a layer can only process the output of the previous layer, if the previous layer destroys too much information, it can never be used in the subsequent layers. Residual connections fix that by having connections between the layer N, N-1 (regular case) and the layer N-2. The layer N-1 can destroy information but the layer N-2 is connected to the layer N so N-2 has access to all the data.
+
+Vanishing gradient : when we have a huge stack of layers, the gradient gets lost and the network can not update itself significantly.
+
+Here is an example where the features are the same for the layers that get merged.
+
+```python
+from keras import layers
+
+x = ...
+
+y = layers.Conv2D(128, 3, activation = 'relu', padding = 'same')(x)
+y = layers.Conv2D(128, 3, activation = 'relu', padding = 'same')(y)
+y = layers.Conv2D(128, 3, activation = 'relu', padding = 'same')(y)
+y = layers.add([y, x])
+```
+
+And another one where they are different.
+
+```python
+from keras import layers
+
+x = ...
+y = layers.Conv2D(128, 3, activation = 'relu', padding = 'same')(x)
+y = layers.Conv2D(128, 3, activation = 'relu', padding = 'same')(y)
+y = layers.MaxPooling2D(2, strides=2)(y)
+residual = layers.Conv2D(128, 1, strides=2, padding='same')(x)
+y = layers.add([y, residual])
+```
+
+Another interesting feature is that we can reuse the same layer. If we imagine that we want to process sentences and have 2 inputs with sentences, we could process each input by using the same layer.
+
+```python
+from keras import layers
+from keras import Input
+from keras.models import Model
+
+"""
+This layer is reused as it processes text the same way for the 2 inputs and
+it trains this layer with the data from both inputs.
+"""
+lstm = layers.LSTM(32)
+
+left_input = Input(shape = (None, 128))
+left_output = lstm(left_input)
+
+right_input = Input(shape = (None, 128))
+right_output = lstm(right_input)
+
+merged = layers.concatenate([ left_output, right_output ], axis = -1)
+predictions = layers.Dense(1, activation = 'sigmoid')(merged)
+
+model = Model([ left_input, right_input ], predictions)
+model.fit([ left_data, right_data ], targets)
+```
+
+The last interesting feature is using models as layers, effectively a model will become a layer like so :
+
+```python
+y = model(x)
+```
+
+With multiple inputs and outputs :
+
+```python
+y1, y2 = model([ x1, x2 ])
+```
+
+Basically when called, the model will reuse its weights and not update them.
+For instance if we want to have 2 cameras to measure the depth, we could reuse the model that processes the images for both cameras.
+
+```python
+from keras import layers
+from keras import applications
+from keras import Input
+
+# This is the base model to process images
+xception_base = applications.Xception(weights = None, include_top = False)
+
+# RGB inputs for 250 x 250 images
+left_input = Input(shape = (250, 250, 3))
+right_input = Input(shape = (250, 250, 3))
+
+left_features = xception_base(left_input)
+right_features = xception_base(right_input)
+
+# The merged layer has the 2 cameras' features
+merged_features = layers.concatenate([ left_features, right_features ], axis = -1)
+```
+
+### Inspecting and monitoring models with Keras callbacks and TensorBoard
+
+When training a model we will get a better view of what is going on inside.
+
+For example when we train a model, we do not know how many epochs will be necessary to reach the optimal point. What we can do instead is have a callback they will get called when the loss function is not improving anymore. This callback can :
+
+- save the current weights at some specific points
+- stop the training process
+- adjust dynamically some parameters during training like the learning rate of the optimizer
+- logging metrics as they change
+
+Example with an early stopping and an export of weights :
+
+```python
+import keras
+
+# Here is a list of the callbacks we will use
+callbacks_list = [
+  # This one stops when the validation accuracy has not improved between epoch X and epoch X + 1
+  keras.callbacks.EarlyStopping(
+    monitor = 'val_acc',
+    patience = 1,
+  ),
+  # Save the weights
+  keras.callbacks.ModelCheckpoint(
+    filepath = 'my_model.h5',
+    # Weights are saved when the validation loss is better than the best one before
+    monitor = 'val_loss',
+    save_best_only = True,
+  ),
+]
+
+model.compile(
+  optimizer = 'rmsprop',
+  loss = 'binary_crossentropy',
+  metrics = ['acc'],
+)
+
+# We need to feed validation data to the model to get val_acc and val_loss
+model.fit(
+  x,
+  y,
+  epochs = 10,
+  batch_size = 32,
+  callbacks = callbacks_list,
+  validation_data = (x_val, y_val),
+)
+```
+
+Now we could want to reduce or increase the learning rate when the loss function is not improving anymore. We might be at a local minima for instance.
+
+```python
+callbacks_list = [
+  keras.callbacks.ReduceLROnPlateau(
+    monitor = 'val_loss'
+    # Multiply the learning rate by this factor when the validation loss has not improved for 10 epochs
+    factor = 0.1,
+    patience = 10,
+  ),
+]
+
+model.fit(
+  x,
+  y,
+  epochs = 10,
+  batch_size = 32,
+  callbacks = callbacks_list,
+  validation_data = (x_val, y_val),
+)
+```
+
+It is also possible to write a callback by implementing the `Callback` class. Then the following methods can be used :
+
+- `on_epoch_begin` : called at the beginning of each epoch
+- `on_epoch_end` : called at the end of each epoch
+
+- `on_batch_begin` : same for batches
+- `on_batch_end` : same for batches
+
+- `on_train_begin` : called at the beginning of the training phase
+- `on_train_end` : called at the end of the training phase
+
+Those methods are called with an argument that is a dictionnary of values regarding the situation of the model. The callback also has access to `self.model` and `self.validation_data`.
+
+```python
+import keras
+import numpy as np
+
+class ActivationLogger(keras.callbacks.Callback):
+
+  # This is called before the training
+  def set_model(self, model):
+    self.model = model
+    layer_outputs = [ layer.output for layer in model.layers ]
+    self.activations_model = keras.models.Model(model.input, layer_outputs)
+
+  def on_epoch_end(self, epoch, logs = None):
+    if self.validation_data is None:
+      raise RuntimeError('Requires validation_data.')
+
+    # First sample for the validation data
+    validation_sample = self.validation_data[0][0:1]
+    activations = self.activations_model.predict(validation_sample)
+
+    f = open('activations_at_epoch_' + str(epoch) + '.npz', 'wb')
+    np.savez(f, activations)
+    f.close()
+```
