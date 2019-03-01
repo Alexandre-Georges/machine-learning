@@ -417,6 +417,8 @@ merged_features = layers.concatenate([ left_features, right_features ], axis = -
 
 When training a model we will get a better view of what is going on inside.
 
+#### Callbacks
+
 For example when we train a model, we do not know how many epochs will be necessary to reach the optimal point. What we can do instead is have a callback they will get called when the loss function is not improving anymore. This callback can :
 
 - save the current weights at some specific points
@@ -521,3 +523,52 @@ class ActivationLogger(keras.callbacks.Callback):
     np.savez(f, activations)
     f.close()
 ```
+
+#### TensorBoard
+
+TensorBoard is a visualization tool that works for Keras with TensorFlow. It displays information during the training phase but also about the model, etc.
+
+We will need a directory :
+
+```bash
+mkdir my_log_dir
+```
+
+On Colab, it is a bit more complicated :
+
+```bash
+!wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip
+!unzip ngrok-stable-linux-amd64.zip
+!mkdir my_log_dir
+```
+
+We will use the model from 12.1.
+
+Then we can start TensorBoard :
+
+```bash
+tensorboard --logdir=my_log_dir
+```
+
+On Colab :
+
+```python
+LOG_DIR = './my_log_dir'
+get_ipython().system_raw(
+    'tensorboard --logdir {} --host 0.0.0.0 --port 6006 &'
+    .format(LOG_DIR)
+)
+get_ipython().system_raw('./ngrok http 6006 &')
+!curl -s http://localhost:4040/api/tunnels | python3 -c \
+    "import sys, json; print(json.load(sys.stdin)['tunnels'][0]['public_url'])"
+```
+
+Also a handy tip to see the model :
+
+```python
+from keras.utils import plot_model
+
+plot_model(model, show_shapes = True, to_file = 'model.png')
+```
+
+### Getting the most out of your models
